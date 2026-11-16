@@ -87,3 +87,45 @@ def uniform_shock(weights, shock: float) -> float:
     """Hypothetischer Schock: alle Titel fallen um denselben Prozentsatz, z. B. -0.20."""
     w = np.asarray(weights, dtype=float)
     return float(w.sum() * shock)
+
+
+# --------------------------------------------------------------------------- VaR und ES mit Konfidenzintervall
+
+
+def var_es_with_ci(samples, confidence: float = 0.99, ci_level: float = 0.95, effective_n: float | None = None) -> dict:
+    """VaR und ES aus einer Stichprobe von Renditen, mit verteilungsfreiem Konfidenzintervall des VaR.
+
+    Das Intervall kommt aus der Binomialverteilung der Ordnungsstatistiken: Die Anzahl der
+    Werte unter dem wahren Quantil ist Binomial(n, 1 - confidence). Es setzt nur unabhängige
+    Ziehungen voraus, keine Verteilungsannahme.
+
+    * Bei Monte-Carlo-Stichproben misst es den **Simulationsfehler** (wird mit mehr Läufen kleiner).
+    * Bei historischen Daten misst es den **Stichprobenfehler** der Daten (wird nur mit mehr Daten kleiner).
+    * Bei überlappenden Mehrtagesfenstern sind die Werte abhängig; dann `effective_n`
+      (z. B. n / Horizont) angeben, sonst ist das Intervall zu schmal.
+
+    Verluste sind positiv. ci_low/ci_high sind die Grenzen des VaR-Intervalls.
+    """
+    from scipy import stats
+
+    _check_confidence(confidence)
+    r = np.asarray(samples, dtype=float)
+    n = r.size
+    p = 1 - confidence
+    q = np.quantile(r, p)
+    tail = r[r <= q]
+
+    n_eff = n if effective_n is None else float(effective_n)
+    alpha = 1 - ci_level
+    k_low = stats.binom.ppf(alpha / 2, int(round(n_eff)), p)
+    k_high = stats.binom.ppf(1 - alpha / 2, int(round(n_eff)), p) + 1
+    p_low = np.clip(k_low / n_eff, 0.0, 1.0)
+    p_high = np.clip(k_high / n_eff, 0.0, 1.0)
+    # Ein kleineres Quantil der Rendite ist ein größerer Verlust: Grenzen tauschen.
+    return {
+        "VaR": float(-q),
+        "VaR KI unten": float(-np.quantile(r, p_high)),
+        "VaR KI oben": float(-np.quantile(r, p_low)),
+        "ES": float(-tail.mean()),
+        "n": n,
+    }
