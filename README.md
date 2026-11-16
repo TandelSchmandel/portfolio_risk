@@ -14,6 +14,9 @@ Monte-Carlo-Value-at-Risk, Stresstests und ein Dashboard.
   - alle Eingangsgrößen (Renditen, Kovarianzmatrix) kommen aus `build_dataset`; Konsistenzprüfung in
     `reports/v2/datenbasis.csv`
 - [ ] Schritt 3: Dashboard
+  - Vorbereitung: `scripts/export_dashboard.py` → `dashboard/data/*.json` (Schema in
+    [`dashboard/DATEN.md`](dashboard/DATEN.md)), Architekturvorschlag in
+    [`dashboard/ARCHITEKTUR.md`](dashboard/ARCHITEKTUR.md)
 - [ ] Schritt 4: Demo und Dokumentation
 
 ## Daten
@@ -28,6 +31,7 @@ Das Format entspricht dem Download-Export von Yahoo Finance.
 pip install -r requirements.txt
 pytest
 python scripts/risk_report_v2.py   # etwa 75 Sekunden
+python scripts/export_dashboard.py # JSON fürs Dashboard, etwa 35 Sekunden
 ```
 
 ## Module
