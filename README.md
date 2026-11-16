@@ -6,7 +6,7 @@ Monte-Carlo-Value-at-Risk, Stresstests und ein Dashboard.
 ## Status
 
 - [x] Schritt 1: Datenladen und Renditeberechnung
-- [ ] Schritt 2: VaR, Monte-Carlo, Stresstests
+- [x] Schritt 2: VaR, Monte-Carlo, Stresstests (Bericht: reports/risk_summary.csv)
 - [ ] Schritt 3: Dashboard
 - [ ] Schritt 4: Demo und Dokumentation
 
