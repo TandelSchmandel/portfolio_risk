@@ -35,6 +35,18 @@ Stresstest-Renditen sind negativ bei Verlust.
   Alle fallen auf Quartalszahlen oder bekannte Marktereignisse. Sie sind **echte Bewegungen und bleiben drin**,
   denn genau diese Tage bestimmen den 99 %-VaR. Entfernen würde das Risiko schönrechnen.
 
+### Eine Datenquelle für alle Rechnungen
+
+Seit dem Datenmodul (`build_dataset`, Annahmen in [`docs/ANNAHMEN_DATEN.md`](../../docs/ANNAHMEN_DATEN.md)) kommen alle
+Eingangsgrößen aus einem `RiskDataset`: die Log-Renditen für Simulation, Stresstests und historische Fenster, die einfachen
+Renditen für die täglichen Portfolio-Renditen im Backtest und **eine** Kovarianzmatrix `ds.cov` für Normal-MC, Student-t-MC
+(inklusive Schätzung von ν), korrelierte Schocks und den Parameterstress. Bootstrap und FHS ziehen direkt aus `ds.log_returns`.
+
+`reports/v2/datenbasis.csv` dokumentiert die Kennzahlen des Datenmoduls und prüft die Konsistenz: Die Tagesvolatilität
+`sqrt(w' Cov w)` (A 2,100 %, B 2,127 %, C 2,339 %) stimmt mit der Streuung der Normal-Simulation bis auf 0,1 % überein.
+Weil die Rohdaten und die Stichprobenkovarianz dieselben sind wie im vorherigen Lauf, sind alle Ergebnisse unverändert
+(Abweichung 0 in `var_modelle.csv`, `backtest.csv` und `stresstests.csv`).
+
 ## Rendite-Handling
 
 * Log-Rendite je Titel: `r = ln(P_t / P_{t-1})`. Über die Zeit additiv, daher werden Mehrtagespfade durch Summieren gebildet.
