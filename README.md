@@ -33,6 +33,7 @@ python scripts/risk_report_v2.py   # etwa 75 Sekunden
 | Modul | Inhalt |
 |---|---|
 | `data.py` | Kurse laden, Renditen |
+| `dataset.py` | `build_dataset`: Kurse → Log- und einfache Renditen → Kovarianzmatrix (Annahmen: [`docs/ANNAHMEN_DATEN.md`](docs/ANNAHMEN_DATEN.md)) |
 | `quality.py` | Datenprüfung: Lücken, Ausreißer, Split-Fehler |
 | `models.py` | Simulation über h Tage: Normal, Student-t, Block-Bootstrap, gefilterte historische Simulation |
 | `risk.py` | VaR, ES, Konfidenzintervall des VaR |
