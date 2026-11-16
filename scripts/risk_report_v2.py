@@ -2,10 +2,14 @@
 
 Schreibt nach reports/v2/:
   datenqualitaet.csv   Prüfung der Kursdaten (Lücken, Ausreißer, Split-Verdacht)
+  datenbasis.csv       Kennzahlen des Datenmoduls und Konsistenzprüfung Kovarianz <-> Simulation
   var_modelle.csv      VaR und ES je Portfolio, Modell, Konfidenz und Horizont (1 und 10 Tage), mit KI
   backtest.csv         Ausnahmen, Kupiec- und Christoffersen-Test je Modell
   stresstests.csv      historische, datengetriebene und hypothetische Szenarien
   zusammenfassung.csv  die wichtigsten Kennzahlen je Portfolio auf einen Blick
+
+Alle Eingangsgrößen kommen aus ``build_dataset`` (src/portfolio_risk/dataset.py): dieselben Kurse,
+Log- und einfachen Renditen und dieselbe Kovarianzmatrix für Simulation, Stresstests und Backtest.
 
 Der erste Durchlauf (scripts/risk_report.py, reports/risk_summary.csv) bleibt unverändert als Vergleich.
 """
@@ -20,8 +24,9 @@ sys.path.insert(0, str(ROOT / "src"))
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 
-from portfolio_risk import load_prices, log_returns, portfolio_returns, simple_returns  # noqa: E402
+from portfolio_risk import portfolio_returns  # noqa: E402
 from portfolio_risk import backtest, models, stress  # noqa: E402
+from portfolio_risk.dataset import RiskDataset, build_dataset, shrunk_covariance  # noqa: E402
 from portfolio_risk.portfolios import PORTFOLIOS, TICKERS  # noqa: E402
 from portfolio_risk.quality import check_price_directory, has_blocking_issues  # noqa: E402
 from portfolio_risk.risk import var_es_with_ci  # noqa: E402
@@ -33,10 +38,11 @@ CONFIDENCES = (0.95, 0.99)
 OUT = ROOT / "reports" / "v2"
 
 
-def var_table(lr: pd.DataFrame, nu: float) -> pd.DataFrame:
+def var_table(ds: RiskDataset, nu: float) -> pd.DataFrame:
+    lr, cov = ds.log_returns, ds.cov
     sims = {
-        "Normal (MC)": lambda w, h: models.simulate_normal(lr, w, h, N_SIMS, SEED),
-        "Student-t (MC)": lambda w, h: models.simulate_student_t(lr, w, h, N_SIMS, SEED, nu=nu),
+        "Normal (MC)": lambda w, h: models.simulate_normal(lr, w, h, N_SIMS, SEED, cov=cov),
+        "Student-t (MC)": lambda w, h: models.simulate_student_t(lr, w, h, N_SIMS, SEED, nu=nu, cov=cov),
         "Block-Bootstrap (MC)": lambda w, h: models.simulate_block_bootstrap(lr, w, h, N_SIMS, SEED),
         "FHS (EWMA, MC)": lambda w, h: models.simulate_filtered_historical(lr, w, h, N_SIMS, SEED),
     }
@@ -71,7 +77,8 @@ def backtest_table(daily: dict[str, pd.Series]) -> pd.DataFrame:
     return pd.concat(frames, ignore_index=True)
 
 
-def stress_table(lr: pd.DataFrame, daily: dict[str, pd.Series], nu: float) -> pd.DataFrame:
+def stress_table(ds: RiskDataset, daily: dict[str, pd.Series], nu: float) -> pd.DataFrame:
+    lr, cov = ds.log_returns, ds.cov
     rows = []
 
     def add(group, scenario, portfolio, value, detail=""):
@@ -97,14 +104,34 @@ def stress_table(lr: pd.DataFrame, daily: dict[str, pd.Series], nu: float) -> pd
             ("Chip-Korb -30 %, Rest korreliert", {t: 1.0 for t in stress.SEMIS}, -0.30),
             ("Plattform-Korb -20 %, Rest korreliert", {t: 1.0 for t in stress.PLATFORMS}, -0.20),
         ]:
-            cs = stress.conditional_shock(lr, w, basket, shock)
+            cs = stress.conditional_shock(lr, w, basket, shock, cov=cov)
             detail = ", ".join(f"{k.split()[-1]} {v:+.1%}" for k, v in cs.items() if k.startswith("Bewegung"))
             add("3 Hypothetisch", label, name, cs["Rendite"], detail)
-        base = stress.stressed_parametric_var(lr, w, 0.99, nu=nu)
+        base = stress.stressed_parametric_var(lr, w, 0.99, nu=nu, cov=cov)
         add("3 Hypothetisch", "Student-t-VaR 99 % 1 Tag, Basis", name, base, "Verlust positiv")
-        add("3 Hypothetisch", "Student-t-VaR 99 % 1 Tag, alle Korrelationen 0.9", name, stress.stressed_parametric_var(lr, w, 0.99, corr=0.9, nu=nu), "Diversifikation bricht weg; Verlust positiv")
-        add("3 Hypothetisch", "Student-t-VaR 99 % 1 Tag, Volatilität x1.5", name, stress.stressed_parametric_var(lr, w, 0.99, vol_factor=1.5, nu=nu), "Verlust positiv")
+        add("3 Hypothetisch", "Student-t-VaR 99 % 1 Tag, alle Korrelationen 0.9", name, stress.stressed_parametric_var(lr, w, 0.99, corr=0.9, nu=nu, cov=cov), "Diversifikation bricht weg; Verlust positiv")
+        add("3 Hypothetisch", "Student-t-VaR 99 % 1 Tag, Volatilität x1.5", name, stress.stressed_parametric_var(lr, w, 0.99, vol_factor=1.5, nu=nu, cov=cov), "Verlust positiv")
     return pd.DataFrame(rows)
+
+
+def dataset_table(ds: RiskDataset, nu: float) -> pd.DataFrame:
+    """Kennzahlen des Datenmoduls und eine Konsistenzprüfung je Portfolio.
+
+    Die Normal-Simulation muss dieselbe Tagesvolatilität liefern wie sqrt(w' Cov w) aus dem
+    Datenmodul (bis auf Monte-Carlo-Fehler und die kleine Umrechnung Log- in einfache Rendite).
+    """
+    summary = ds.summary()
+    _, shrink = shrunk_covariance(ds.log_returns)
+    rows = {k: {name: v for name in PORTFOLIOS} for k, v in summary.items()}
+    rows["Ledoit-Wolf-Schrumpfung"] = {name: shrink for name in PORTFOLIOS}
+    rows["Student-t nu"] = {name: nu for name in PORTFOLIOS}
+    for name, w in PORTFOLIOS.items():
+        sigma = ds.portfolio_volatility(w)
+        sim = models.simulate_normal(ds.log_returns, w, 1, 200_000, SEED, cov=ds.cov)
+        rows.setdefault("Tagesvolatilität sqrt(w' Cov w)", {})[name] = sigma
+        rows.setdefault("Volatilität p. a.", {})[name] = sigma * np.sqrt(252)
+        rows.setdefault("Tagesvolatilität Normal-MC (Prüfung)", {})[name] = float(sim.std(ddof=1))
+    return pd.DataFrame(rows).T
 
 
 def main() -> None:
@@ -116,14 +143,14 @@ def main() -> None:
     if has_blocking_issues(quality):
         raise SystemExit("Datenfehler gefunden, siehe reports/v2/datenqualitaet.csv")
 
-    prices = load_prices(ROOT / "data" / "raw")[TICKERS]
-    lr = log_returns(prices)
-    sr = simple_returns(prices)
-    daily = {name: portfolio_returns(sr, w) for name, w in PORTFOLIOS.items()}
-    nu = round(models.fit_t_degrees_of_freedom(lr), 2)
-    print(f"Daten: {lr.index[0].date()} bis {lr.index[-1].date()}, {len(lr)} Tagesrenditen, Student-t nu = {nu}")
+    ds = build_dataset(ROOT / "data" / "raw", TICKERS)
+    daily = {name: portfolio_returns(ds.simple_returns, w) for name, w in PORTFOLIOS.items()}
+    nu = round(models.fit_t_degrees_of_freedom(ds.log_returns, cov=ds.cov), 2)
+    print(f"Daten: {ds.log_returns.index[0].date()} bis {ds.log_returns.index[-1].date()}, {len(ds.log_returns)} Tagesrenditen, Student-t nu = {nu}")
+    basis = dataset_table(ds, nu)
+    basis.to_csv(OUT / "datenbasis.csv", float_format="%.6f")
 
-    var = var_table(lr, nu)
+    var = var_table(ds, nu)
     var.to_csv(OUT / "var_modelle.csv", index=False, float_format="%.5f")
     print(f"VaR-Modelle fertig ({time.time() - t0:.0f} s)")
 
@@ -131,7 +158,7 @@ def main() -> None:
     bt.to_csv(OUT / "backtest.csv", index=False, float_format="%.4f")
     print(f"Backtest fertig ({time.time() - t0:.0f} s)")
 
-    st = stress_table(lr, daily, nu)
+    st = stress_table(ds, daily, nu)
     st.to_csv(OUT / "stresstests.csv", index=False, float_format="%.4f")
 
     summary = {}

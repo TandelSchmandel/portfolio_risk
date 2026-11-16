@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-from portfolio_risk.models import horizon_portfolio_return
+from portfolio_risk.models import resolve_covariance, horizon_portfolio_return
 
 SEMIS = ["NVDA", "AVGO", "TSM", "AMD", "MU"]
 PLATFORMS = ["MSFT", "GOOGL", "AMZN", "META", "PLTR"]
@@ -88,7 +88,7 @@ def sector_shock(tickers: list[str], weights, shocks: dict[str, float], default:
     return float(w @ moves)
 
 
-def conditional_shock(log_returns: pd.DataFrame, weights, basket: dict[str, float], shock: float) -> dict:
+def conditional_shock(log_returns: pd.DataFrame, weights, basket: dict[str, float], shock: float, cov=None) -> dict:
     """Korrelierter Schock: ein Korb (z. B. NVDA allein oder alle Chiptitel) fällt um `shock`.
 
     Die übrigen Titel bewegen sich um ihren bedingten Erwartungswert unter der historischen
@@ -98,7 +98,7 @@ def conditional_shock(log_returns: pd.DataFrame, weights, basket: dict[str, floa
     tickers = list(log_returns.columns)
     a = np.array([basket.get(t, 0.0) for t in tickers])
     a = a / a.sum()
-    cov = log_returns.cov().to_numpy()
+    cov = resolve_covariance(log_returns, cov)
     s = np.log1p(shock)
     moves = cov @ a / (a @ cov @ a) * s
     w = np.asarray(weights, dtype=float)
@@ -107,14 +107,17 @@ def conditional_shock(log_returns: pd.DataFrame, weights, basket: dict[str, floa
     return result
 
 
-def stressed_parametric_var(log_returns: pd.DataFrame, weights, confidence: float = 0.99, corr: float | None = None, vol_factor: float = 1.0, nu: float | None = None) -> float:
+def stressed_parametric_var(log_returns: pd.DataFrame, weights, confidence: float = 0.99, corr: float | None = None, vol_factor: float = 1.0, nu: float | None = None, cov=None) -> float:
     """Parametrischer Tages-VaR (Normal oder Student-t, ohne Drift) mit gestressten Parametern.
 
     corr: alle paarweisen Korrelationen auf diesen Wert setzen (z. B. 0.9: Diversifikation bricht weg).
+    cov: Basis-Kovarianz (z. B. ``RiskDataset.cov``); ohne Angabe die Stichprobe der Renditen.
     vol_factor: alle Volatilitäten mit diesem Faktor multiplizieren (z. B. 1.5).
     """
-    vol = log_returns.std().to_numpy() * vol_factor
-    c = log_returns.corr().to_numpy()
+    base = resolve_covariance(log_returns, cov)
+    sd = np.sqrt(np.diag(base))
+    vol = sd * vol_factor
+    c = base / np.outer(sd, sd)
     if corr is not None:
         c = np.full_like(c, corr)
         np.fill_diagonal(c, 1.0)

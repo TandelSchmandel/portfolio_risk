@@ -44,6 +44,30 @@ def _weights(weights, n_assets: int) -> np.ndarray:
     return w
 
 
+def resolve_covariance(log_returns, cov=None) -> np.ndarray:
+    """Kovarianzmatrix für die Simulation: die übergebene (z. B. ``RiskDataset.cov``) oder die Stichprobe.
+
+    Wird ``cov`` übergeben, rechnen alle Modelle mit genau der Matrix aus ``build_dataset``.
+    Sind Renditen und Matrix beschriftet, wird die Matrix nach den Spalten der Renditen sortiert;
+    fehlt ein Ticker in der Matrix, bricht die Funktion ab.
+    """
+    x = _as_array(log_returns)
+    d = x.shape[1]
+    if cov is None:
+        return np.cov(x, rowvar=False).reshape(d, d)
+    if isinstance(cov, pd.DataFrame) and isinstance(log_returns, pd.DataFrame):
+        missing = [t for t in log_returns.columns if t not in cov.columns]
+        if missing:
+            raise ValueError(f"Kovarianzmatrix ohne {missing}")
+        cov = cov.loc[log_returns.columns, log_returns.columns]
+    c = np.asarray(cov, dtype=float)
+    if c.shape != (d, d):
+        raise ValueError(f"Kovarianzmatrix hat Form {c.shape}, erwartet ({d}, {d})")
+    if not np.allclose(c, c.T):
+        raise ValueError("Kovarianzmatrix ist nicht symmetrisch")
+    return c
+
+
 def horizon_portfolio_return(cum_log_returns: np.ndarray, weights: np.ndarray) -> np.ndarray:
     """Buy-and-hold-Rendite des Portfolios aus kumulierten Log-Renditen je Titel."""
     return np.expm1(cum_log_returns) @ weights
@@ -62,11 +86,11 @@ def _run_chunks(n_sims: int, chunk: int, simulate_chunk: Callable[[int], np.ndar
 # --------------------------------------------------------------------------- Normalverteilung
 
 
-def simulate_normal(log_returns, weights, horizon: int = 1, n_sims: int = 1_000_000, seed: int = 42, chunk: int = 100_000):
+def simulate_normal(log_returns, weights, horizon: int = 1, n_sims: int = 1_000_000, seed: int = 42, chunk: int = 100_000, cov=None):
     """Multivariate Normalverteilung mit historischer Kovarianz, Tage unabhängig. Vergleichsmodell zu Schritt 2 v1."""
     x = _as_array(log_returns)
     w = _weights(weights, x.shape[1])
-    chol = np.linalg.cholesky(np.cov(x, rowvar=False).reshape(x.shape[1], x.shape[1]))
+    chol = np.linalg.cholesky(resolve_covariance(log_returns, cov))
     rng = np.random.default_rng(seed)
 
     def one(size: int) -> np.ndarray:
@@ -81,7 +105,7 @@ def simulate_normal(log_returns, weights, horizon: int = 1, n_sims: int = 1_000_
 # --------------------------------------------------------------------------- Student-t
 
 
-def multivariate_t_loglik(x: np.ndarray, nu: float) -> float:
+def multivariate_t_loglik(x: np.ndarray, nu: float, cov=None) -> float:
     """Log-Likelihood einer multivariaten t-Verteilung mit Mittelwert 0 und der Stichprobenkovarianz.
 
     Die Formmatrix wird so gewählt, dass die Kovarianz der t-Verteilung der Stichprobenkovarianz
@@ -89,8 +113,7 @@ def multivariate_t_loglik(x: np.ndarray, nu: float) -> float:
     Form der Ränder (Fat Tails) hängt von nu ab.
     """
     n, d = x.shape
-    cov = np.cov(x, rowvar=False).reshape(d, d)
-    shape = cov * (nu - 2) / nu
+    shape = resolve_covariance(x, cov) * (nu - 2) / nu
     chol = np.linalg.cholesky(shape)
     solved = np.linalg.solve(chol, x.T)
     maha = np.sum(solved**2, axis=0)
@@ -99,15 +122,16 @@ def multivariate_t_loglik(x: np.ndarray, nu: float) -> float:
     return float(n * const - (nu + d) / 2 * np.sum(np.log1p(maha / nu)))
 
 
-def fit_t_degrees_of_freedom(log_returns, grid: np.ndarray | None = None) -> float:
+def fit_t_degrees_of_freedom(log_returns, grid: np.ndarray | None = None, cov=None) -> float:
     """Schätzt die Freiheitsgrade nu per Maximum-Likelihood auf einem feinen Gitter (2.1 bis 50).
 
     Kleine nu bedeuten dicke Ränder; nu -> unendlich ist die Normalverteilung.
     """
+    c = resolve_covariance(log_returns, cov) if cov is not None else None
     x = _as_array(log_returns)
     x = x - x.mean(axis=0)
     grid = np.arange(2.1, 50.01, 0.05) if grid is None else np.asarray(grid)
-    ll = np.array([multivariate_t_loglik(x, nu) for nu in grid])
+    ll = np.array([multivariate_t_loglik(x, nu, c) for nu in grid])
     return float(grid[int(np.argmax(ll))])
 
 
@@ -119,6 +143,7 @@ def simulate_student_t(
     seed: int = 42,
     nu: float | None = None,
     chunk: int = 100_000,
+    cov=None,
 ):
     """Multivariate Student-t: gleiche Kovarianz wie die Normalverteilung, aber dicke Ränder.
 
@@ -127,11 +152,12 @@ def simulate_student_t(
     """
     x = _as_array(log_returns)
     w = _weights(weights, x.shape[1])
-    nu = fit_t_degrees_of_freedom(x) if nu is None else float(nu)
+    c = resolve_covariance(log_returns, cov)
+    nu = fit_t_degrees_of_freedom(x, cov=c) if nu is None else float(nu)
     if nu <= 2:
         raise ValueError("nu muss größer als 2 sein, sonst ist die Varianz unendlich")
     d = x.shape[1]
-    chol = np.linalg.cholesky(np.cov(x, rowvar=False).reshape(d, d) * (nu - 2) / nu)
+    chol = np.linalg.cholesky(c * (nu - 2) / nu)
     rng = np.random.default_rng(seed)
 
     def one(size: int) -> np.ndarray:

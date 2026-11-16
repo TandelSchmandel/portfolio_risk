@@ -11,6 +11,8 @@ Monte-Carlo-Value-at-Risk, Stresstests und ein Dashboard.
   - zweiter Durchlauf mit höherer Genauigkeit (Student-t, Bootstrap, FHS, Backtesting, 10-Tages-VaR,
     21 Stresstests): `scripts/risk_report_v2.py` → `reports/v2/`, Methodik und Grenzen in
     [`reports/v2/METHODIK.md`](reports/v2/METHODIK.md)
+  - alle Eingangsgrößen (Renditen, Kovarianzmatrix) kommen aus `build_dataset`; Konsistenzprüfung in
+    `reports/v2/datenbasis.csv`
 - [ ] Schritt 3: Dashboard
 - [ ] Schritt 4: Demo und Dokumentation
 
