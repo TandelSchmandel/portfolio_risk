@@ -1,0 +1,64 @@
+Gruppe,Szenario,Portfolio,Wert,Detail
+1 Historisch,Zinswende 2022 (Vergleich v1),A_Hauptportfolio,-0.4705,"2022-01-03 bis 2022-10-14: Fed erhöht Zinsen, Tech-Bewertungen fallen; gleicher Zeitraum wie im ersten Durchlauf"
+1 Historisch,META-Gewinnwarnung,A_Hauptportfolio,-0.0669,2022-02-03 bis 2022-02-03: Einzeltag: META -26 % nach Quartalszahlen
+1 Historisch,Ausverkauf Q2 2022,A_Hauptportfolio,-0.2967,"2022-04-01 bis 2022-06-16: Inflationsschock, Nasdaq-Tief Mitte Juni"
+1 Historisch,Rotation und Yen-Carry Sommer 2024,A_Hauptportfolio,-0.2010,"2024-07-11 bis 2024-08-05: Rotation aus Mega-Caps, Auflösung des Yen-Carry-Trades"
+1 Historisch,DeepSeek-Schock,A_Hauptportfolio,-0.0803,"2025-01-27 bis 2025-01-27: Einzeltag: Zweifel am KI-Investitionsbedarf, NVDA -17 %"
+1 Historisch,Zollschock April 2025,A_Hauptportfolio,-0.1307,2025-04-03 bis 2025-04-08: Vier Handelstage nach Ankündigung der US-Zölle
+2 Datengetrieben,Schlechtestes 1-Tage-Fenster,A_Hauptportfolio,-0.0803,2025-01-27 bis 2025-01-27
+2 Datengetrieben,Schlechtestes 5-Tage-Fenster,A_Hauptportfolio,-0.1419,2022-05-05 bis 2022-05-11
+2 Datengetrieben,Schlechtestes 20-Tage-Fenster,A_Hauptportfolio,-0.2193,2022-03-30 bis 2022-04-27
+2 Datengetrieben,Schlechtestes 60-Tage-Fenster,A_Hauptportfolio,-0.3045,2022-04-05 bis 2022-06-30
+2 Datengetrieben,Maximaler Drawdown,A_Hauptportfolio,-0.4990,"Hoch 2021-11-19, Tief 2022-11-03, erholt 2023-06-14"
+2 Datengetrieben,Stressed VaR 99 % 1 Tag (ungünstigstes 250-Tage-Fenster),A_Hauptportfolio,0.0616,"2021-11-17 bis 2022-11-14, Verlust positiv"
+3 Hypothetisch,Alle Titel -20 % (Vergleich v1),A_Hauptportfolio,-0.2000,
+3 Hypothetisch,"Chips -30 %, Plattformen -15 %",A_Hauptportfolio,-0.2250,
+3 Hypothetisch,"KI-Blase platzt: Chips -50 %, Plattformen -30 %",A_Hauptportfolio,-0.4000,
+3 Hypothetisch,"NVDA -30 %, Rest korreliert",A_Hauptportfolio,-0.1791,"NVDA -30.0%, AVGO -17.7%, TSM -16.9%, AMD -23.1%, MU -19.8%, MSFT -10.3%, GOOGL -10.4%, AMZN -12.3%, META -13.9%, PLTR -19.7%"
+3 Hypothetisch,"Chip-Korb -30 %, Rest korreliert",A_Hauptportfolio,-0.2251,"NVDA -30.8%, AVGO -26.6%, TSM -24.5%, AMD -34.4%, MU -33.3%, MSFT -11.7%, GOOGL -13.2%, AMZN -15.2%, META -16.8%, PLTR -23.5%"
+3 Hypothetisch,"Plattform-Korb -20 %, Rest korreliert",A_Hauptportfolio,-0.1831,"NVDA -20.6%, AVGO -15.2%, TSM -13.4%, AMD -20.6%, MU -15.8%, MSFT -13.6%, GOOGL -15.3%, AMZN -18.6%, META -21.6%, PLTR -29.8%"
+3 Hypothetisch,"Student-t-VaR 99 % 1 Tag, Basis",A_Hauptportfolio,0.0535,Verlust positiv
+3 Hypothetisch,"Student-t-VaR 99 % 1 Tag, alle Korrelationen 0.9",A_Hauptportfolio,0.0682,Diversifikation bricht weg; Verlust positiv
+3 Hypothetisch,"Student-t-VaR 99 % 1 Tag, Volatilität x1.5",A_Hauptportfolio,0.0792,Verlust positiv
+1 Historisch,Zinswende 2022 (Vergleich v1),B_gleichgewichtet,-0.4681,"2022-01-03 bis 2022-10-14: Fed erhöht Zinsen, Tech-Bewertungen fallen; gleicher Zeitraum wie im ersten Durchlauf"
+1 Historisch,META-Gewinnwarnung,B_gleichgewichtet,-0.0654,2022-02-03 bis 2022-02-03: Einzeltag: META -26 % nach Quartalszahlen
+1 Historisch,Ausverkauf Q2 2022,B_gleichgewichtet,-0.2889,"2022-04-01 bis 2022-06-16: Inflationsschock, Nasdaq-Tief Mitte Juni"
+1 Historisch,Rotation und Yen-Carry Sommer 2024,B_gleichgewichtet,-0.2047,"2024-07-11 bis 2024-08-05: Rotation aus Mega-Caps, Auflösung des Yen-Carry-Trades"
+1 Historisch,DeepSeek-Schock,B_gleichgewichtet,-0.0744,"2025-01-27 bis 2025-01-27: Einzeltag: Zweifel am KI-Investitionsbedarf, NVDA -17 %"
+1 Historisch,Zollschock April 2025,B_gleichgewichtet,-0.1414,2025-04-03 bis 2025-04-08: Vier Handelstage nach Ankündigung der US-Zölle
+2 Datengetrieben,Schlechtestes 1-Tage-Fenster,B_gleichgewichtet,-0.0868,2026-11-05 bis 2026-11-05
+2 Datengetrieben,Schlechtestes 5-Tage-Fenster,B_gleichgewichtet,-0.1413,2022-05-05 bis 2022-05-11
+2 Datengetrieben,Schlechtestes 20-Tage-Fenster,B_gleichgewichtet,-0.2138,2022-03-30 bis 2022-04-27
+2 Datengetrieben,Schlechtestes 60-Tage-Fenster,B_gleichgewichtet,-0.2966,2022-04-05 bis 2022-06-30
+2 Datengetrieben,Maximaler Drawdown,B_gleichgewichtet,-0.4973,"Hoch 2021-12-27, Tief 2022-11-03, erholt 2023-11-10"
+2 Datengetrieben,Stressed VaR 99 % 1 Tag (ungünstigstes 250-Tage-Fenster),B_gleichgewichtet,0.0631,"2024-04-12 bis 2025-04-10, Verlust positiv"
+3 Hypothetisch,Alle Titel -20 % (Vergleich v1),B_gleichgewichtet,-0.2000,
+3 Hypothetisch,"Chips -30 %, Plattformen -15 %",B_gleichgewichtet,-0.2250,
+3 Hypothetisch,"KI-Blase platzt: Chips -50 %, Plattformen -30 %",B_gleichgewichtet,-0.4000,
+3 Hypothetisch,"NVDA -30 %, Rest korreliert",B_gleichgewichtet,-0.1742,"NVDA -30.0%, AVGO -17.7%, TSM -16.9%, AMD -23.1%, MU -19.8%, MSFT -10.3%, GOOGL -10.4%, AMZN -12.3%, META -13.9%, PLTR -19.7%"
+3 Hypothetisch,"Chip-Korb -30 %, Rest korreliert",B_gleichgewichtet,-0.2300,"NVDA -30.8%, AVGO -26.6%, TSM -24.5%, AMD -34.4%, MU -33.3%, MSFT -11.7%, GOOGL -13.2%, AMZN -15.2%, META -16.8%, PLTR -23.5%"
+3 Hypothetisch,"Plattform-Korb -20 %, Rest korreliert",B_gleichgewichtet,-0.1844,"NVDA -20.6%, AVGO -15.2%, TSM -13.4%, AMD -20.6%, MU -15.8%, MSFT -13.6%, GOOGL -15.3%, AMZN -18.6%, META -21.6%, PLTR -29.8%"
+3 Hypothetisch,"Student-t-VaR 99 % 1 Tag, Basis",B_gleichgewichtet,0.0541,Verlust positiv
+3 Hypothetisch,"Student-t-VaR 99 % 1 Tag, alle Korrelationen 0.9",B_gleichgewichtet,0.0701,Diversifikation bricht weg; Verlust positiv
+3 Hypothetisch,"Student-t-VaR 99 % 1 Tag, Volatilität x1.5",B_gleichgewichtet,0.0801,Verlust positiv
+1 Historisch,Zinswende 2022 (Vergleich v1),C_chip_lastig,-0.4901,"2022-01-03 bis 2022-10-14: Fed erhöht Zinsen, Tech-Bewertungen fallen; gleicher Zeitraum wie im ersten Durchlauf"
+1 Historisch,META-Gewinnwarnung,C_chip_lastig,-0.0527,2022-02-03 bis 2022-02-03: Einzeltag: META -26 % nach Quartalszahlen
+1 Historisch,Ausverkauf Q2 2022,C_chip_lastig,-0.2967,"2022-04-01 bis 2022-06-16: Inflationsschock, Nasdaq-Tief Mitte Juni"
+1 Historisch,Rotation und Yen-Carry Sommer 2024,C_chip_lastig,-0.2248,"2024-07-11 bis 2024-08-05: Rotation aus Mega-Caps, Auflösung des Yen-Carry-Trades"
+1 Historisch,DeepSeek-Schock,C_chip_lastig,-0.1109,"2025-01-27 bis 2025-01-27: Einzeltag: Zweifel am KI-Investitionsbedarf, NVDA -17 %"
+1 Historisch,Zollschock April 2025,C_chip_lastig,-0.1477,2025-04-03 bis 2025-04-08: Vier Handelstage nach Ankündigung der US-Zölle
+2 Datengetrieben,Schlechtestes 1-Tage-Fenster,C_chip_lastig,-0.1109,2025-01-27 bis 2025-01-27
+2 Datengetrieben,Schlechtestes 5-Tage-Fenster,C_chip_lastig,-0.1549,2026-10-30 bis 2026-11-05
+2 Datengetrieben,Schlechtestes 20-Tage-Fenster,C_chip_lastig,-0.2335,2022-03-30 bis 2022-04-27
+2 Datengetrieben,Schlechtestes 60-Tage-Fenster,C_chip_lastig,-0.3117,2022-04-05 bis 2022-06-30
+2 Datengetrieben,Maximaler Drawdown,C_chip_lastig,-0.4987,"Hoch 2021-12-27, Tief 2022-10-14, erholt 2023-05-26"
+2 Datengetrieben,Stressed VaR 99 % 1 Tag (ungünstigstes 250-Tage-Fenster),C_chip_lastig,0.0680,"2024-04-08 bis 2025-04-04, Verlust positiv"
+3 Hypothetisch,Alle Titel -20 % (Vergleich v1),C_chip_lastig,-0.2000,
+3 Hypothetisch,"Chips -30 %, Plattformen -15 %",C_chip_lastig,-0.2625,
+3 Hypothetisch,"KI-Blase platzt: Chips -50 %, Plattformen -30 %",C_chip_lastig,-0.4500,
+3 Hypothetisch,"NVDA -30 %, Rest korreliert",C_chip_lastig,-0.2032,"NVDA -30.0%, AVGO -17.7%, TSM -16.9%, AMD -23.1%, MU -19.8%, MSFT -10.3%, GOOGL -10.4%, AMZN -12.3%, META -13.9%, PLTR -19.7%"
+3 Hypothetisch,"Chip-Korb -30 %, Rest korreliert",C_chip_lastig,-0.2614,"NVDA -30.8%, AVGO -26.6%, TSM -24.5%, AMD -34.4%, MU -33.3%, MSFT -11.7%, GOOGL -13.2%, AMZN -15.2%, META -16.8%, PLTR -23.5%"
+3 Hypothetisch,"Plattform-Korb -20 %, Rest korreliert",C_chip_lastig,-0.1801,"NVDA -20.6%, AVGO -15.2%, TSM -13.4%, AMD -20.6%, MU -15.8%, MSFT -13.6%, GOOGL -15.3%, AMZN -18.6%, META -21.6%, PLTR -29.8%"
+3 Hypothetisch,"Student-t-VaR 99 % 1 Tag, Basis",C_chip_lastig,0.0594,Verlust positiv
+3 Hypothetisch,"Student-t-VaR 99 % 1 Tag, alle Korrelationen 0.9",C_chip_lastig,0.0724,Diversifikation bricht weg; Verlust positiv
+3 Hypothetisch,"Student-t-VaR 99 % 1 Tag, Volatilität x1.5",C_chip_lastig,0.0878,Verlust positiv

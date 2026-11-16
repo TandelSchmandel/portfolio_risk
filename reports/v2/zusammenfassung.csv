@@ -1,0 +1,17 @@
+,A_Hauptportfolio,B_gleichgewichtet,C_chip_lastig
+VaR 99 % 1T historisch,0.0551,0.0550,0.0597
+VaR 99 % 1T Normal (wie v1),0.0475,0.0480,0.0529
+VaR 99 % 1T Student-t,0.0528,0.0535,0.0588
+VaR 99 % 1T Bootstrap,0.0562,0.0562,0.0609
+VaR 99 % 1T FHS (aktuelle Vola),0.0669,0.0706,0.0791
+ES 99 % 1T Student-t,0.0696,0.0704,0.0773
+VaR 99 % 10T historisch,0.1292,0.1299,0.1435
+VaR 99 % 10T Student-t,0.1445,0.1459,0.1597
+VaR 99 % 10T FHS,0.1742,0.1848,0.2081
+Backtest 99 %: Ausnahmen Normal,13.0000,16.0000,14.0000
+Backtest 99 %: Ausnahmen Student-t,11.0000,11.0000,11.0000
+Backtest 99 %: Ausnahmen FHS,13.0000,14.0000,12.0000
+Backtest 99 %: erwartet,10.0000,10.0000,10.0000
+Maximaler Drawdown,-0.4990,-0.4973,-0.4987
+Schlechtester Tag,-0.0803,-0.0868,-0.1109
+"KI-Blase platzt (Chips -50 %, Plattformen -30 %)",-0.4000,-0.4000,-0.4500
