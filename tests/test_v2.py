@@ -7,7 +7,7 @@ from scipy import stats
 
 from portfolio_risk import backtest, models, stress
 from portfolio_risk.quality import check_price_directory, has_blocking_issues, robust_z
-from portfolio_risk.risk import var_es_with_ci
+from portfolio_risk.risk import var_es_curve, var_es_with_ci
 
 
 @pytest.fixture
@@ -130,6 +130,36 @@ def test_var_ci_contains_true_quantile_and_shrinks_with_n():
     for res in (small, large):
         assert res["VaR KI unten"] <= true_var <= res["VaR KI oben"]
     assert (large["VaR KI oben"] - large["VaR KI unten"]) < (small["VaR KI oben"] - small["VaR KI unten"]) / 5
+
+
+def test_var_es_curve_equals_single_levels():
+    rng = np.random.default_rng(11)
+    r = rng.standard_t(4, 30_000) * 0.02
+    levels = [0.9, 0.95, 0.975, 0.99, 0.995]
+    for kwargs in ({}, {"effective_n": 3_000}, {"ci_level": 0.9}):
+        curve = var_es_curve(r, levels, **kwargs)
+        assert curve["n"] == r.size and all(len(curve[key]) == len(levels) for key in ("VaR", "VaR KI unten", "VaR KI oben", "ES"))
+        for i, level in enumerate(levels):
+            single = var_es_with_ci(r, level, **kwargs)
+            assert {key: curve[key][i] for key in ("VaR", "VaR KI unten", "VaR KI oben", "ES")} == {k: v for k, v in single.items() if k != "n"}
+    # Bezug: die Definitionen aus risk.py
+    from portfolio_risk.risk import expected_shortfall, historical_var
+
+    curve = var_es_curve(r, levels)
+    assert curve["VaR"] == [historical_var(r, level) for level in levels]
+    assert curve["ES"] == [expected_shortfall(r, level) for level in levels]
+    assert var_es_curve(r, [])["VaR"] == []
+    with pytest.raises(ValueError):
+        var_es_curve(r, [0.99, 1.0])
+
+
+def test_binom_ppf_equals_scipy_stats():
+    from portfolio_risk.risk import _binom_ppf
+
+    for n in (1, 5, 62, 125, 1253, 100_000, 1_000_000):
+        for p in (0.005, 0.01, 0.05, 0.1):
+            for q in (0.025, 0.975):
+                assert _binom_ppf(q, n, p) == float(stats.binom.ppf(q, n, p))
 
 
 def test_var_ci_wider_with_effective_n():

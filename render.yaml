@@ -1,0 +1,30 @@
+# Render-Blueprint für den Dashboard-Dienst (https://render.com/docs/blueprint-spec).
+# In Render "New" > "Blueprint" wählen und dieses Repository verbinden. Ablauf: dashboard/BETRIEB.md
+services:
+  - type: web
+    name: portfolio-risk-api
+    runtime: python
+    plan: free
+    region: frankfurt
+    buildCommand: pip install -r requirements-api.txt
+    startCommand: uvicorn portfolio_risk.api:create_app --factory --app-dir src --host 0.0.0.0 --port $PORT --no-access-log
+    # --no-access-log: keine Zeile je Anfrage im Protokoll, also keine IP-Adressen der Besucher
+    healthCheckPath: /api/health
+    # Jeder Commit auf main baut den Dienst neu, auch der tägliche Commit mit neuen Kursen.
+    autoDeployTrigger: commit
+    buildFilter:
+      paths:
+        - src/**
+        - data/raw/**
+        - requirements-api.txt
+        - render.yaml
+        - .python-version
+    envVars:
+      # Ein Rechenkern reicht; mehrere Threads kosten auf kleinen Maschinen nur Zeit.
+      - key: OMP_NUM_THREADS
+        value: "1"
+      - key: OPENBLAS_NUM_THREADS
+        value: "1"
+      # Erlaubte Herkunftsseiten für Browser-Anfragen, durch Komma getrennt. "*" erlaubt alle.
+      - key: RISK_ALLOWED_ORIGINS
+        value: "*"

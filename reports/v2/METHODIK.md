@@ -3,6 +3,10 @@
 Erzeugt mit `python scripts/risk_report_v2.py` (Laufzeit etwa 75 s, fester Seed `20261116`).
 Der erste Durchlauf (`scripts/risk_report.py`, `reports/risk_summary.csv`) bleibt unverändert als Vergleich.
 
+Datenstand dieser Ergebnisse: Kurse bis 13.11.2026. Seit Schritt 3 werden die Kurse in `data/raw`
+täglich fortgeschrieben (`dashboard/BETRIEB.md`). Die Dateien in diesem Ordner bleiben auf dem Stand
+vom 13.11.2026, bis das Skript erneut läuft; ein neuer Lauf rechnet dann mit dem längeren Zeitraum.
+
 | Datei | Inhalt |
 |---|---|
 | `datenqualitaet.csv` | Prüfung jeder Kursdatei |

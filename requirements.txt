@@ -1,4 +1,4 @@
-pandas>=2.0
-numpy>=1.24
-scipy>=1.10
+# Entwicklung und Tests: Laufzeit des Dienstes plus Testwerkzeuge
+-r requirements-api.txt
 pytest>=8.0
+httpx2>=2.0

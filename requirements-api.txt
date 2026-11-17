@@ -1,0 +1,22 @@
+# Laufzeit des Dienstes (src/portfolio_risk/api.py), vollständig festgeschrieben.
+# Genau diese Versionen sind mit Python 3.13 getestet; so kann ein neuer Build nicht unbemerkt anders rechnen.
+# Neu erzeugen: in einer frischen Umgebung "pip install numpy pandas scipy fastapi uvicorn", Tests laufen lassen, "pip freeze".
+annotated-doc==0.0.6
+annotated-types==0.8.0
+anyio==4.16.0
+click==8.5.1
+fastapi==0.163.1
+h11==0.16.0
+idna==3.20
+numpy==2.5.3
+opentelemetry-api==1.45.2
+pandas==3.0.5
+pydantic==2.14.3
+pydantic_core==2.50.4
+python-dateutil==4.0.0
+scipy==1.18.1
+starlette==1.10.0
+typing-inspection==0.4.5
+typing_extensions==4.16.0
+tzdata==2026.6
+uvicorn==0.54.0
