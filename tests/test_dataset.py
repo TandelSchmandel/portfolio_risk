@@ -119,7 +119,7 @@ def test_real_data_if_present():
     ds = build_dataset(raw, TICKERS)
     summary = ds.summary()
     assert summary["Positiv definit"]
-    assert summary["Tagesrenditen"] == 1253
+    assert summary["Tagesrenditen"] >= 1253  # die Kursdaten werden täglich fortgeschrieben
     assert summary["Konditionszahl"] < 100
     for weights in PORTFOLIOS.values():
         assert 0.01 < ds.portfolio_volatility(weights) < 0.05

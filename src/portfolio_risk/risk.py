@@ -92,8 +92,32 @@ def uniform_shock(weights, shock: float) -> float:
 # --------------------------------------------------------------------------- VaR und ES mit Konfidenzintervall
 
 
-def var_es_with_ci(samples, confidence: float = 0.99, ci_level: float = 0.95, effective_n: float | None = None) -> dict:
-    """VaR und ES aus einer Stichprobe von Renditen, mit verteilungsfreiem Konfidenzintervall des VaR.
+def _binom_ppf(q: float, n: int, p: float) -> float:
+    """Quantil der Binomialverteilung, identisch zu ``scipy.stats.binom.ppf`` für 0 < q < 1.
+
+    ``scipy.stats`` ruft dafür intern dieselbe Funktion aus ``scipy.special`` auf. Der direkte Aufruf
+    spart den Import von ``scipy.stats`` (über eine halbe Sekunde Rechenzeit), was beim Start des
+    Dashboard-Dienstes auf kleinen Maschinen zählt. Ältere SciPy-Versionen nehmen den Weg über ``scipy.stats``.
+    """
+    try:
+        from scipy.special._ufuncs import _binom_ppf as ppf
+    except ImportError:  # SciPy vor 1.13
+        from scipy import stats
+
+        return float(stats.binom.ppf(q, n, p))
+    return float(ppf(q, n, p))
+
+
+def _ci_levels(n_eff: float, p: float, ci_level: float) -> tuple[float, float]:
+    """Quantilniveaus der Intervallgrenzen des VaR aus der Binomialverteilung der Ordnungsstatistiken."""
+    alpha = 1 - ci_level
+    k_low = _binom_ppf(alpha / 2, int(round(n_eff)), p)
+    k_high = _binom_ppf(1 - alpha / 2, int(round(n_eff)), p) + 1
+    return float(np.clip(k_low / n_eff, 0.0, 1.0)), float(np.clip(k_high / n_eff, 0.0, 1.0))
+
+
+def var_es_curve(samples, confidences, ci_level: float = 0.95, effective_n: float | None = None) -> dict:
+    """VaR und ES für mehrere Konfidenzniveaus auf einmal, mit verteilungsfreiem Konfidenzintervall des VaR.
 
     Das Intervall kommt aus der Binomialverteilung der Ordnungsstatistiken: Die Anzahl der
     Werte unter dem wahren Quantil ist Binomial(n, 1 - confidence). Es setzt nur unabhängige
@@ -104,28 +128,34 @@ def var_es_with_ci(samples, confidence: float = 0.99, ci_level: float = 0.95, ef
     * Bei überlappenden Mehrtagesfenstern sind die Werte abhängig; dann `effective_n`
       (z. B. n / Horizont) angeben, sonst ist das Intervall zu schmal.
 
-    Verluste sind positiv. ci_low/ci_high sind die Grenzen des VaR-Intervalls.
+    Verluste sind positiv. Ergebnis: je Schlüssel eine Liste in der Reihenfolge von `confidences`,
+    dazu die Stichprobengröße ``n``. Alle Quantile entstehen in einem Durchgang (ein Teilsortieren).
     """
-    from scipy import stats
-
-    _check_confidence(confidence)
+    confidences = [float(c) for c in confidences]
     r = np.asarray(samples, dtype=float)
     n = r.size
-    p = 1 - confidence
-    q = np.quantile(r, p)
-    tail = r[r <= q]
-
     n_eff = n if effective_n is None else float(effective_n)
-    alpha = 1 - ci_level
-    k_low = stats.binom.ppf(alpha / 2, int(round(n_eff)), p)
-    k_high = stats.binom.ppf(1 - alpha / 2, int(round(n_eff)), p) + 1
-    p_low = np.clip(k_low / n_eff, 0.0, 1.0)
-    p_high = np.clip(k_high / n_eff, 0.0, 1.0)
+    levels = []
+    for confidence in confidences:
+        _check_confidence(confidence)
+        p = 1 - confidence
+        p_low, p_high = _ci_levels(n_eff, p, ci_level)
+        levels += [p, p_high, p_low]
+    q = np.quantile(r, levels).reshape(-1, 3) if levels else np.empty((0, 3))
     # Ein kleineres Quantil der Rendite ist ein größerer Verlust: Grenzen tauschen.
     return {
-        "VaR": float(-q),
-        "VaR KI unten": float(-np.quantile(r, p_high)),
-        "VaR KI oben": float(-np.quantile(r, p_low)),
-        "ES": float(-tail.mean()),
+        "VaR": [float(-x) for x in q[:, 0]],
+        "VaR KI unten": [float(-x) for x in q[:, 1]],
+        "VaR KI oben": [float(-x) for x in q[:, 2]],
+        "ES": [float(-r[r <= x].mean()) for x in q[:, 0]],
         "n": n,
     }
+
+
+def var_es_with_ci(samples, confidence: float = 0.99, ci_level: float = 0.95, effective_n: float | None = None) -> dict:
+    """VaR und ES aus einer Stichprobe von Renditen, mit Konfidenzintervall des VaR (siehe ``var_es_curve``).
+
+    Verluste sind positiv. ``VaR KI unten`` und ``VaR KI oben`` sind die Grenzen des VaR-Intervalls.
+    """
+    curve = var_es_curve(samples, [confidence], ci_level, effective_n)
+    return {key: value[0] if isinstance(value, list) else value for key, value in curve.items()}

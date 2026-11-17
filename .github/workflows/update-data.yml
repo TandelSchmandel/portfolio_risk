@@ -1,0 +1,52 @@
+name: Kursdaten aktualisieren
+
+# Lädt die täglichen Kurse neu, prüft sie und schreibt sie nach data/raw.
+# Der Dashboard-Dienst wird bei jedem Commit auf main neu gebaut und rechnet danach mit dem neuen Stand.
+on:
+  schedule:
+    # Dienstag bis Samstag 05:23 UTC: Die US-Börse hat am Vorabend geschlossen, die Tageskurse sind endgültig.
+    - cron: "23 5 * * 2-6"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: kursdaten
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-api.txt
+            requirements-update.txt
+
+      - name: Abhängigkeiten installieren
+        run: pip install -r requirements.txt -r requirements-update.txt
+
+      - name: Kurse laden und prüfen
+        id: prices
+        run: python scripts/update_prices.py
+
+      - name: Tests mit dem neuen Stand
+        if: steps.prices.outputs.changed == 'true'
+        run: pytest -q
+
+      - name: Neuen Stand committen
+        if: steps.prices.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/raw
+          git commit -m "Kursdaten bis ${{ steps.prices.outputs.last_day }} aktualisieren"
+          git push

@@ -1,0 +1,2 @@
+# Nur für scripts/update_prices.py (Abruf der Kurse von Yahoo Finance)
+yfinance>=1.0
